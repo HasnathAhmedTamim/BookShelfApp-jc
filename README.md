@@ -1,7 +1,40 @@
-# Bookshelf
+# Bookshelf 📚
+
+> A modern Android book discovery app with smart search, elegant Material3 UI, and seamless navigation
+
+[![Kotlin](https://img.shields.io/badge/Kotlin-1.9+-purple.svg)](https://kotlinlang.org/)
+[![Compose](https://img.shields.io/badge/Jetpack_Compose-1.5+-green.svg)](https://developer.android.com/jetpack/compose)
+[![Material3](https://img.shields.io/badge/Material3-Latest-blue.svg)](https://m3.material.io/)
+[![API](https://img.shields.io/badge/Google_Books_API-v1-orange.svg)](https://developers.google.com/books)
 
 ## Overview
 An Android book discovery app built with Kotlin and Jetpack Compose. Search for books, browse them in a grid, and view detailed information including cover, title, authors, description, ratings, and more. Features a powerful search system with recent searches, always-visible home navigation, and a polished Material3 UI. Uses Google Books API for book data and MVVM architecture with Compose state management.
+
+## Screenshots
+
+### Home Screen
+- Popular books grid on app launch
+- Always-visible home button (🏠)
+- Smart search bar with search button
+- Recent searches chips
+
+### Search Results
+- Adaptive grid layout
+- Consistent card sizing (6dp elevation)
+- Loading placeholders during image load
+- Book metadata preview
+
+### Book Details
+- Large cover image (300dp)
+- Complete book information
+- Star ratings and review counts
+- Scrollable description
+- Material3 TopAppBar with back navigation
+
+### Empty & Error States
+- Friendly "No books found" message
+- Retry functionality
+- Clear navigation options
 
 ## Implemented Features
 
@@ -79,18 +112,79 @@ sealed interface BookshelfUiState {
 - `BookshelfApplication` provides `BooksRepository` via ViewModelProvider.Factory
 - `MainActivity` obtains `BookshelfViewModel` using `by viewModels` with custom factory
 
-## How it works (flow)
-1. App launches and `MainActivity` obtains `BookshelfViewModel` via `viewModels` factory.
-2. `MainActivity` calls `setContent { BookshelfApp(uiState = viewModel.uiState, onRetry = { viewModel.loadBooks("jazz+history") }) }`.
-3. UI observes `uiState` from the ViewModel and displays data, loading, or error states.
-4. On retry, ViewModel reloads books (example query: `jazz+history`) from the repository.
+## How It Works (User Flow)
 
-## Key files
-- `app/src/main/java/com/example/bookshelf/MainActivity.kt`
-- `app/src/main/java/com/example/bookshelf/BookshelfApplication.kt`
-- `app/src/main/java/com/example/bookshelf/userinterface/BookshelfViewModel.kt`
-- `app/src/main/java/com/example/bookshelf/userinterface/BookshelfApp.kt`
-- `app/src/main/java/com/example/bookshelf/ui/theme/*`
+### 1. App Launch & Home State
+1. User opens app
+2. `MainActivity` creates `BookshelfViewModel` with DI-provided `BooksRepository`
+3. ViewModel's `init` block calls `loadBooks("popular books")`
+4. Loading state shows briefly
+5. Home screen displays with popular books grid
+
+### 2. Search Flow
+1. User types query in search bar (e.g., "kotlin")
+2. User clicks **[Search]** button or presses Enter
+3. `viewModel.performSearch()` is called
+4. Query saved to recent searches (max 5)
+5. API request to Google Books
+6. Results displayed in grid
+7. Recent searches chip appears for quick re-search
+
+### 3. Navigation to Book Details
+1. User taps a book card in grid
+2. `viewModel.onBookSelected(book)` sets `DetailSuccess` state
+3. `BookDetailScreen` displays with:
+   - Large cover image
+   - Title, authors, ratings
+   - Publication info, page count
+   - Categories
+   - Full description (scrollable)
+4. Back arrow in TopAppBar and system back button available
+
+### 4. Return to Home (Multiple Ways)
+- **Option A**: Click 🏠 home button → `clearSearch()` → loads "popular books"
+- **Option B**: Click ✕ clear button → same as home
+- **Option C**: From detail screen, press back → `onBackToList()` → restores cached list
+- **Option D**: System back button → `BackHandler` intercepts → returns to list
+
+### 5. Handle Empty Results
+1. Search returns no books
+2. `EmptySearchScreen` shows "📚 No books found"
+3. User can:
+   - Click **[Try Again]** to retry search
+   - Click 🏠 or ✕ to return home
+   - Type new search query
+
+### 6. State Preservation
+- Book list cached in ViewModel
+- No API reload when navigating back from details
+- Recent searches persist across navigations
+- Search query preserved in UI
+
+## Key Files
+
+**Core App:**
+- `app/src/main/java/com/example/bookshelf/MainActivity.kt` – Entry point, connects ViewModel to UI
+- `app/src/main/java/com/example/bookshelf/BookshelfApplication.kt` – App-level DI, provides BooksRepository
+
+**ViewModel & State:**
+- `app/src/main/java/com/example/bookshelf/userinterface/BookshelfViewModel.kt` – State management, search logic, navigation, caching
+- `app/src/main/java/com/example/bookshelf/userinterface/BookshelfUiState.kt` – Sealed UI state interface
+
+**UI Composables:**
+- `app/src/main/java/com/example/bookshelf/userinterface/BookshelfScreen.kt` – Main app routing, BackHandler, LoadingScreen, ErrorScreen, EmptySearchScreen
+- `app/src/main/java/com/example/bookshelf/userinterface/HomeScreen.kt` – Combines SearchBar + RecentSearches + BooksGrid
+- `app/src/main/java/com/example/bookshelf/userinterface/SearchBar.kt` – Search input with home button, clear, and search button + RecentSearchesSection
+- `app/src/main/java/com/example/bookshelf/userinterface/BooksGrid.kt` – Grid list with BookItem cards (optimized with key, loading/error states)
+- `app/src/main/java/com/example/bookshelf/userinterface/BookDetailScreen.kt` – Detail view with scrollable layout, complete book info
+- `app/src/main/java/com/example/bookshelf/ui/theme/*` – Material3 theme configuration
+
+**Data & Network:**
+- `app/src/main/java/com/example/bookshelf/data/Book.kt` – Enhanced data model (id, title, description, authors, thumbnailUrl, rating, ratingsCount, publishedDate, pageCount, categories)
+- `app/src/main/java/com/example/bookshelf/data/BooksRepository.kt` – Repository interface & NetworkBooksRepository implementation
+- `app/src/main/java/com/example/bookshelf/network/BooksApiService.kt` – Retrofit API service for Google Books API
+- `app/src/main/java/com/example/bookshelf/network/model/SearchResponse.kt` – DTOs: SearchResponse, VolumeItem, VolumeInfo
+- `app/src/main/java/com/example/bookshelf/network/model/VolumeDetailsResponse.kt` – DTOs: VolumeDetailsResponse, VolumeInfoDetails, ImageLinks
 
 ## Requirements
 - Android Studio (compatible with Android Studio Otter)
@@ -106,12 +200,60 @@ sealed interface BookshelfUiState {
     - `.\gradlew installDebug`
 
 ## Testing
-- Add unit tests for ViewModel logic (mock repository).
-- UI tests for Compose screens using `androidx.compose.ui.test`.
+
+### Recommended Test Scenarios
+
+**Unit Tests (ViewModel):**
+- Search query updates and validation
+- Recent searches management (max 5, deduplication)
+- State transitions (Loading → ListSuccess → DetailSuccess)
+- Cache management on back navigation
+- Error handling with network failures
+
+**UI Tests (Compose):**
+- Search bar input and button clicks
+- Home button navigation
+- Book card clicks and navigation to details
+- Recent searches chip interactions
+- Empty state display when no results
+- Loading state visibility
+- Error screen with retry functionality
+- System back button behavior
+
+**Integration Tests:**
+- End-to-end search flow
+- API response parsing and mapping
+- Image loading with Coil
+- State preservation across navigation
+
+**Tools:**
+- `androidx.compose.ui.test` for Compose UI testing
+- JUnit for unit tests
+- Mockito or MockK for mocking repository
 
 ## Notes & Tips
-- The example query used by the app is `jazz+history` when retrying load.
-- Inspect `BookshelfViewModel.provideFactory(...)` to adjust DI for tests.
+- Default search query: "popular books" (loads on app start and when clearing search)
+- Recent searches: Up to 5 unique searches maintained
+- Home button (🏠): Always visible, returns to popular books home page
+- Clear button (✕): Clears search text and returns to home
+- Google Books API: Fetches title, authors, description, ratings, categories, page count, publication date
+- Image URLs: Automatically converted from HTTP to HTTPS
+- Navigation: System back button handled via `BackHandler` composable
+- State caching: Book list cached to avoid unnecessary API calls on back navigation
+- Empty results: Friendly message with retry option
+- Inspect `BookshelfViewModel.provideFactory(...)` to adjust DI for tests
+
+## Future Enhancements
+- **Advanced Filtering**: Filter by genre, publication date, rating, language
+- **Sorting Options**: Sort by relevance, newest, rating, title
+- **Favorites/Bookmarks**: Save favorite books to local database (Room DB)
+- **Reading List**: Create and manage custom reading lists
+- **Book Preview**: Open external links to full book previews on Google Books
+- **Pagination**: Implement infinite scroll or pagination for large result sets
+- **Offline Support**: Cache book data for offline browsing
+- **Dark Mode**: Enhanced dark theme customization
+- **Share Books**: Share book details via social media or messaging
+- **Book Reviews**: Display user reviews from Google Books
 
 
 ## Contributing
