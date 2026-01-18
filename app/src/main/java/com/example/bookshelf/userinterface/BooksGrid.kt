@@ -39,7 +39,7 @@ private val CARD_PADDING = 8.dp
 private val ITEM_SPACING = 8.dp
 private val CARD_HEIGHT = 240.dp
 private val IMAGE_HEIGHT = 140.dp
-private val CARD_ELEVATION = 4.dp
+private val CARD_ELEVATION = 6.dp  // Increased from 4dp for better visibility
 private val CORNER_RADIUS = 8.dp
 private val IMAGE_CORNER_RADIUS = 6.dp
 
@@ -77,7 +77,7 @@ fun BookItem(
                 interactionSource = interactionSource,
                 onClick = onClick
             ),
-        elevation = CardDefaults.cardElevation(defaultElevation = CARD_ELEVATION.value.toInt().dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = CARD_ELEVATION),
         shape = RoundedCornerShape(CORNER_RADIUS)
     ) {
         Column(

@@ -20,12 +20,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             MaterialTheme {
-                BookshelfApp(
-                    uiState = viewModel.uiState,
-                    onRetry = { viewModel.loadBooks("jazz+history") },
-                    onBookClick = { book -> viewModel.onBookSelected(book) },
-                    onBack = { viewModel.onBackToList() }
-                )
+                BookshelfApp(viewModel = viewModel)
             }
         }
     }

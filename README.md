@@ -36,42 +36,17 @@ An Android book discovery app built with Kotlin and Jetpack Compose. Search for 
 - **Dependency Injection**: `BookshelfApplication` provides `BooksRepository` via factory for `BookshelfViewModel`
 
 ## How it works (flow)
-
-### User Flow:
-1. **App Launch**: `MainActivity` obtains `BookshelfViewModel` via `viewModels` factory with DI-provided `BooksRepository`.
-2. **Initial Load**: ViewModel's `init { loadBooks("jazz+history") }` fetches books and sets state to `ListSuccess(books)`.
-3. **Display Grid**: `BookshelfApp` observes `uiState` and renders `BooksGrid` with cached book list.
-4. **Book Selection**: User taps a book card → `onBookClick(book)` calls `viewModel.onBookSelected(book)`.
-5. **Detail Screen**: ViewModel sets state to `DetailSuccess(book)` → `BookDetailScreen` displays full book info (cover, title, authors, description).
-6. **Back Navigation**: User taps back button → `onBackToList()` restores cached list via `ListSuccess(cachedBooks)` → grid reappears.
-7. **Error/Retry**: If network fails, `uiState = Error` → user taps "Retry" → `viewModel.loadBooks()` re-attempts fetch.
-
-### State Management:
-- ViewModel caches the loaded book list so returning from details avoids re-fetching.
-- `uiState` drives all UI rendering; compose automatically recomposes when state changes.
-- Loading/error/list/detail states are exhaustively handled in `BookshelfApp` when expression.
+1. App launches and `MainActivity` obtains `BookshelfViewModel` via `viewModels` factory.
+2. `MainActivity` calls `setContent { BookshelfApp(uiState = viewModel.uiState, onRetry = { viewModel.loadBooks("jazz+history") }) }`.
+3. UI observes `uiState` from the ViewModel and displays data, loading, or error states.
+4. On retry, ViewModel reloads books (example query: `jazz+history`) from the repository.
 
 ## Key files
-**Core App:**
-- `app/src/main/java/com/example/bookshelf/MainActivity.kt` – Entry point, connects ViewModel to UI
-- `app/src/main/java/com/example/bookshelf/BookshelfApplication.kt` – App-level DI, provides BooksRepository
-
-**ViewModel & State:**
-- `app/src/main/java/com/example/bookshelf/userinterface/BookshelfViewModel.kt` – State management, navigation logic, caching
-- `app/src/main/java/com/example/bookshelf/userinterface/BookshelfUiState.kt` – Sealed UI state interface
-
-**UI Composables:**
-- `app/src/main/java/com/example/bookshelf/userinterface/BookshelfScreen.kt` – Main app routing (shows correct screen per state)
-- `app/src/main/java/com/example/bookshelf/userinterface/BooksGrid.kt` – Grid list with `BookItem` cards (optimized with key, loading/error states)
-- `app/src/main/java/com/example/bookshelf/userinterface/BookDetailScreen.kt` – Detail view with scrollable layout
-- `app/src/main/java/com/example/bookshelf/ui/theme/*` – Material3 theme configuration
-
-**Data & Network:**
-- `app/src/main/java/com/example/bookshelf/data/Book.kt` – Data model (id, title, description, authors, thumbnailUrl)
-- `app/src/main/java/com/example/bookshelf/data/BooksRepository.kt` – Repository interface & NetworkBooksRepository implementation
-- `app/src/main/java/com/example/bookshelf/network/BooksApiService.kt` – Retrofit API service for Google Books API
-- `app/src/main/java/com/example/bookshelf/network/model/SearchResponse.kt` – DTO for search results
-- `app/src/main/java/com/example/bookshelf/network/model/VolumeDetailsResponse.kt` – DTO for book details
+- `app/src/main/java/com/example/bookshelf/MainActivity.kt`
+- `app/src/main/java/com/example/bookshelf/BookshelfApplication.kt`
+- `app/src/main/java/com/example/bookshelf/userinterface/BookshelfViewModel.kt`
+- `app/src/main/java/com/example/bookshelf/userinterface/BookshelfApp.kt`
+- `app/src/main/java/com/example/bookshelf/ui/theme/*`
 
 ## Requirements
 - Android Studio (compatible with Android Studio Otter)
@@ -94,18 +69,6 @@ An Android book discovery app built with Kotlin and Jetpack Compose. Search for 
 - The example query used by the app is `jazz+history` when retrying load.
 - Inspect `BookshelfViewModel.provideFactory(...)` to adjust DI for tests.
 
-## Improvements & Future Enhancements
-- **Search Functionality**: Add a search bar allowing users to enter custom queries
-- **Favorites/Bookmarks**: Save favorite books to local database (Room DB)
-- **Book Preview**: Open external links to full book previews on Google Books
-- **Pagination**: Implement LazyColumn/LazyVerticalGrid pagination for large result sets
-- **Caching**: Add local caching layer with Room or DataStore to avoid repeated API calls
-- **Reading List**: Allow users to create and manage reading lists
-- **Book Reviews/Ratings**: Integrate user ratings or external review APIs
-- **Offline Support**: Download book metadata for offline browsing
-- **Advanced Filtering**: Filter by genre, publication date, author
-- **Dark Mode**: Enhanced dark theme support for Material3
-- **Animations**: Add transition animations between list and detail screens
 
 ## Contributing
 - Open an issue for bugs or feature requests.

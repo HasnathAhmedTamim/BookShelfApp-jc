@@ -18,12 +18,49 @@ class BookshelfViewModel(
     var uiState: BookshelfUiState by mutableStateOf(BookshelfUiState.Loading)
         private set
 
+    var searchQuery: String by mutableStateOf("")
+        private set
+
+    var recentSearches: List<String> by mutableStateOf(emptyList())
+        private set
+
     // cached list used to restore the grid when navigating back
     private var cachedBooks: List<Book> = emptyList()
 
     init {
-        // Default search term
-        loadBooks("jazz+history")
+        // Default search term - show popular books on app start
+        loadBooks("popular books")
+    }
+
+    fun updateSearchQuery(query: String) {
+        searchQuery = query
+        // If user clears the search, show default books
+        if (query.isEmpty() && cachedBooks.isNotEmpty()) {
+            // Keep showing the last successful search results
+            uiState = BookshelfUiState.ListSuccess(cachedBooks)
+        }
+    }
+
+    @Suppress("unused")
+    fun performSearch(query: String = searchQuery) {
+        if (query.isNotBlank()) {
+            saveRecentSearch(query)
+            loadBooks(query)
+        } else {
+            // If search is empty, load default results
+            loadBooks("popular books")
+        }
+    }
+
+    fun clearSearch() {
+        searchQuery = ""
+        // Load default popular books when clearing search
+        loadBooks("popular books")
+    }
+
+    private fun saveRecentSearch(query: String) {
+        val updated = (listOf(query) + recentSearches).distinct().take(5)
+        recentSearches = updated
     }
 
     fun loadBooks(query: String) {
@@ -38,7 +75,7 @@ class BookshelfViewModel(
                     cachedBooks = books
                     uiState = BookshelfUiState.ListSuccess(books)
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 uiState = BookshelfUiState.Error
             }
         }

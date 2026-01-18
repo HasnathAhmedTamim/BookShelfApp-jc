@@ -2,6 +2,7 @@
 package com.example.bookshelf.data
 
 import com.example.bookshelf.network.BooksApi
+import com.example.bookshelf.network.model.VolumeInfo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -16,7 +17,7 @@ class NetworkBooksRepository : BooksRepository {
             val items = searchResponse.items ?: emptyList()
 
             items.mapNotNull { item ->
-                val info = item.volumeInfo ?: return@mapNotNull null
+                val info: VolumeInfo = item.volumeInfo ?: return@mapNotNull null
 
                 val rawThumb = info.imageLinks?.thumbnail
                 val thumbnailUrl = rawThumb
@@ -28,7 +29,12 @@ class NetworkBooksRepository : BooksRepository {
                     title = info.title ?: "No title",
                     thumbnailUrl = thumbnailUrl,
                     description = info.description ?: "No description available",
-                    authors = info.authors ?: emptyList()
+                    authors = info.authors ?: emptyList(),
+                    rating = info.averageRating,
+                    ratingsCount = info.ratingsCount,
+                    publishedDate = info.publishedDate,
+                    pageCount = info.pageCount,
+                    categories = info.categories
                 )
             }
         }
