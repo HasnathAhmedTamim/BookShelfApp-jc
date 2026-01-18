@@ -1,3 +1,4 @@
+// kotlin
 package com.example.bookshelf.network.model
 
 data class SearchResponse(
@@ -10,5 +11,8 @@ data class VolumeItem(
 )
 
 data class VolumeInfo(
-    val title: String?
+    val title: String?,
+    val description: String?,
+    val authors: List<String>?,
+    val imageLinks: ImageLinks?
 )

@@ -1,3 +1,4 @@
+// kotlin
 package com.example.bookshelf.network.model
 
 data class VolumeDetailsResponse(
@@ -7,6 +8,8 @@ data class VolumeDetailsResponse(
 
 data class VolumeInfoDetails(
     val title: String?,
+    val description: String?,
+    val authors: List<String>?,
     val imageLinks: ImageLinks?
 )
 

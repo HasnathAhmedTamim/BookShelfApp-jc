@@ -1,3 +1,4 @@
+
 package com.example.bookshelf.userinterface
 
 import androidx.compose.runtime.getValue
@@ -6,6 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.bookshelf.data.Book
 import com.example.bookshelf.data.BooksRepository
 import kotlinx.coroutines.launch
 
@@ -15,6 +17,9 @@ class BookshelfViewModel(
 
     var uiState: BookshelfUiState by mutableStateOf(BookshelfUiState.Loading)
         private set
+
+    // cached list used to restore the grid when navigating back
+    private var cachedBooks: List<Book> = emptyList()
 
     init {
         // Default search term
@@ -29,12 +34,22 @@ class BookshelfViewModel(
                 if (books.isEmpty()) {
                     uiState = BookshelfUiState.Error
                 } else {
-                    uiState = BookshelfUiState.Success(books)
+                    // cache the loaded list so we can restore it on back
+                    cachedBooks = books
+                    uiState = BookshelfUiState.ListSuccess(books)
                 }
             } catch (e: Exception) {
                 uiState = BookshelfUiState.Error
             }
         }
+    }
+
+    fun onBookSelected(book: Book) {
+        uiState = BookshelfUiState.DetailSuccess(book)
+    }
+
+    fun onBackToList() {
+        uiState = BookshelfUiState.ListSuccess(cachedBooks)
     }
 
     companion object {

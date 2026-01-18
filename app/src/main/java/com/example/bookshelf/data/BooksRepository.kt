@@ -1,3 +1,4 @@
+// kotlin
 package com.example.bookshelf.data
 
 import com.example.bookshelf.network.BooksApi
@@ -12,35 +13,23 @@ class NetworkBooksRepository : BooksRepository {
     override suspend fun getBooks(query: String): List<Book> =
         withContext(Dispatchers.IO) {
             val searchResponse = BooksApi.service.searchBooks(query)
-
             val items = searchResponse.items ?: emptyList()
 
-            val books = mutableListOf<Book>()
+            items.mapNotNull { item ->
+                val info = item.volumeInfo ?: return@mapNotNull null
 
-            // এক coroutine এর ভিতরে sequentially details fetch
-            for (item in items) {
-                val volumeId = item.id
-                try {
-                    val details = BooksApi.service.getBookDetails(volumeId)
-                    val title = details.volumeInfo?.title ?: "No title"
-                    val rawThumb = details.volumeInfo?.imageLinks?.thumbnail
+                val rawThumb = info.imageLinks?.thumbnail
+                val thumbnailUrl = rawThumb
+                    ?.replace("http://", "https://")
+                    ?: ""
 
-                    // http → https
-                    val thumbnailUrl = rawThumb
-                        ?.replace("http://", "https://")
-                        ?: ""
-
-                    books.add(
-                        Book(
-                            id = volumeId,
-                            title = title,
-                            thumbnailUrl = thumbnailUrl
-                        )
-                    )
-                } catch (e: Exception) {
-                    // কোনো একটা book fail করলে, ওটাকে skip করো, বাকি গুলো load হোক
-                }
+                Book(
+                    id = item.id,
+                    title = info.title ?: "No title",
+                    thumbnailUrl = thumbnailUrl,
+                    description = info.description ?: "No description available",
+                    authors = info.authors ?: emptyList()
+                )
             }
-            books
         }
 }
